@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Advanced Editing Demo</title>
+
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+        <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js" integrity="sha384-kW+oWsYx3YpxvjtZjFXqazFpA7UP/MbiY4jvs+RWZo2+N94PFZ36T6TFkc9O3qoB" crossorigin="anonymous"></script>
+
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+        <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script> -->
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.0/jquery.textcomplete.js"></script>
+        
+        <link href="alloy-editor/assets/alloy-editor-atlas.css" rel="stylesheet">
+        <script src="alloy-editor/alloy-editor-all.js"></script>
+
+        <script type="text/javascript" src="jquery-comments/data/comments-data.js"></script>
+        <link rel="stylesheet" type="text/css" href="jquery-comments/jquery-comments.css">
+        <script type="text/javascript" src="jquery-comments/jquery-comments.js"></script>
+        
+        <style>
+            body {
+                
+            }
+            #editable {
+                font-family: "Open Sans","Helvetica Neue",sans-serif;
+                font-size: 18px;
+            }
+            #editable:focus {
+                outline: 0;
+            }
+            comment {
+                border-style: solid;
+                border-bottom-color: #ffe9a8;
+                border-top-color: transparent;
+                border-left-color: transparent;
+                border-right-color: transparent;
+            }
+            comment:hover {
+                background-color: rgb(255, 233, 168);
+            }
+            #paper-container {
+                margin: 50px;
+                width: 70%;
+            }
+            #comments-container {
+                margin: 50px;
+                width: 30%;
+            }
+            #container {
+                display: flex;
+            }
+            .comment .comment-wrapper .wrapper .content,
+            .comment .comment-wrapper .name {
+                color: #637282;
+            }
+            .comment:hover .comment-wrapper .wrapper .content, 
+            .comment:hover .comment-wrapper .name {
+                color: #000;
+            }
+            .comment .comment-wrapper .wrapper .actions,
+            .comment .comment-wrapper time {
+                visibility: hidden;
+            }
+            .comment:hover .comment-wrapper .wrapper .actions,
+            .comment:hover .comment-wrapper time {
+                visibility: visible;
+            }
+            .comment .comment-wrapper .profile-picture {
+                opacity: 0.3;
+                filter: alpha(opacity=30);
+            }
+            .comment:hover .comment-wrapper .profile-picture {
+                opacity: 1;
+                filter: alpha(opacity=100);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="paper-container">
+                <div id="editable" contenteditable="true" data-placeholder="Write here the content">
+                    <p>Teachers may encourage children to learn to read and spell these words, by giving them spelling lists containing words that all have the same letter string to take home. The more the children read and write these words, the more they will embed the knowledge that the letters 'ight' always make the same sound.</p>
+                    <ul>
+                        <li>A list item</li>
+                        <li>A second list item</li>
+                    </ul>
+                    <p>Teachers may encourage children to learn to read and spell these words, by giving them spelling lists containing words that all have the same letter string to take home. The more the children read and write these words, the more they will embed the knowledge that the letters 'ight' always make the same sound.</p>
+                </div>
+            </div>
+            <div id="comments-container"></div>
+        </div>
+        <script>
+            $(function() {
+                var commenting = null;
+                var comments = null;
+
+                var saveComment = function(data) {
+                    // Convert pings to human readable format
+                    $(data.pings).each(function(index, id) {
+                        var user = usersArray.filter(function(user){return user.id == id})[0];
+                        data.content = data.content.replace('@' + id, '@' + user.fullname);
+                    });
+                    return data;
+                }
+                $('#comments-container').comments({
+                    profilePictureURL: 'https://i.imgur.com/EW8v5yG.jpg',
+                    currentUserId: 3,
+                    roundProfilePictures: true,
+                    textareaRows: 1,
+                    enableAttachments: false,
+                    enableHashtags: true,
+                    enablePinging: false,
+                    enableNavigation: false,
+                    enableUpvoting: false,
+                    getUsers: function(success, error) {
+                        setTimeout(function() {
+                            success(usersArray);
+                        }, 500);
+                    },
+                    getComments: function(success, error) {
+                        setTimeout(function() {
+                            success(commentsArray);
+                        }, 500);
+                    },
+                    postComment: function(data, success, error) {
+                        setTimeout(function() {
+                            
+                            success(saveComment(data));
+                        }, 500);
+                    },
+                    putComment: function(data, success, error) {
+                        setTimeout(function() {
+                            success(saveComment(data));
+                        }, 500);
+                    },
+                    deleteComment: function(data, success, error) {
+                        setTimeout(function() {
+                            success();
+                        }, 500);
+                    },
+                    upvoteComment: function(data, success, error) {
+                        setTimeout(function() {
+                            success(data);
+                        }, 500);
+                    },
+                    uploadAttachments: function(dataArray, success, error) {
+                        setTimeout(function() {
+                            success(dataArray);
+                        }, 500);
+                    },
+                });
+                comments = $.data($('#comments-container')[0], 'comments');
+                comments.toggleMainCommentingField(false);
+
+                function removeComment(commentClass) {
+                    var elements = new Array();
+                    for (var i = 0; i< $('.' + commentClass).length; i++) {
+                        elements.push(element = $('.' + commentClass)[i]);
+                    }
+                    elements.forEach((element) => {
+                        element.outerHTML = $(element).html();
+                    });
+                }
+                var editor = AlloyEditor.editable('editable', {
+                    title: false,
+                    toolbars: {
+                        styles: {
+                            selections: [
+                                {
+                                    name: 'text',
+                                    buttons: ['bold', 'italic', 'underline', '|', 'strike', 'h1', 'h2', 'ul', 'link', 'comment'],
+                                    test: AlloyEditor.SelectionTest.text,
+                                },
+                                {
+                                    name: 'link',
+                                    buttons: ['linkEdit'],
+                                    test: AlloyEditor.SelectionTest.link
+                                }
+                            ]
+                        }
+                    }
+                });
+
+                editor.get('nativeEditor').on('actionPerformed', function(event) {
+                    if (event.data == null || event.data.props.tabKey !== 'comment') {
+                        return;
+                    }
+
+                    event.editor.getSelection().removeAllRanges();
+                    event.editor.fire('actionPerformed', null);
+
+                    var commentClass = event.data.props.style.attributes.class;
+                    commenting = {
+                        commentClass: commentClass
+                    };
+
+                    comments.toggleMainCommentingField(true);
+                    comments.options.commentClass = commentClass;
+                });
+                
+                editor.get('nativeEditor').on('editorInteraction', function(event) {
+                    if (commenting != null && event.data.nativeEvent.type != "mouseleave") {
+                        removeComment(commenting.commentClass);
+                        commenting = null;
+                        comments.toggleMainCommentingField(false);
+                    }
+                });
+
+                $(document).on("mouseenter", "[class*='commentTarget']", function(e) {
+                    comments.setActive($(this).attr("class"));
+                });
+
+                $('#comments-container').on('click', '.commenting-field.main .close', function(e, param) {
+                    console.log($("[class*='commentTarget']"));
+
+                    if (commenting != null && param != "post") {
+                        console.log(e);
+                        removeComment(commenting.commentClass);
+                        commenting = null;
+                    }
+                    comments.toggleMainCommentingField(false);
+                    
+                });
+            });
+        </script>
+    </body>
+</html>
