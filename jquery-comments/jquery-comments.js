@@ -910,9 +910,16 @@
             this.options.postComment(commentJSON, success, error);
         },
 
-        setActive: function(commentClass) {
-            var self = this;
-            
+        setActive: function(commentTargetId) {
+            commentList = this.$el.find('#comment-list');
+            var commentEl = commentList.find('.comment[data-id="'+commentTargetId+'"]');
+            !commentEl.hasClass('active') ? commentEl.addClass('active') : '';
+        },
+
+        setDeactive: function(commentTargetId) {
+            commentList = this.$el.find('#comment-list');
+            var commentEl = commentList.find('.comment[data-id="'+commentTargetId+'"]');
+            commentEl.hasClass('active') ? commentEl.removeClass("active") : '';
         },
 
         createComment: function(commentJSON) {
@@ -2100,12 +2107,12 @@
 
         createCommentJSON: function(textarea) {
             var currentUserId = this.options.currentUserId;
-            var currentUser = usersArray.find(function(user) { console.log(user.id == currentUserId); return user.id == currentUserId; });
+            var currentUser = usersArray.find(function(user) { return user.id == currentUserId; });
 
             var time = new Date().toISOString();
             var commentJSON = {
                 // id: 'c' +  (this.getComments().length + 1),   // Temporary id
-                id: this.options.commentClass,
+                id: this.options.commentTargetId,
                 parent: textarea.attr('data-parent') || null,
                 created: time,
                 modified: time,
@@ -2413,9 +2420,7 @@
     $.fn.comments = function(options) {
         return this.each(function() {
             var comments = Object.create(Comments);
-            console.log(this);
             $.data(this, 'comments', comments);
-            console.log($.data(this, 'comments'));
             comments.init(options || {}, this);
         });
     };

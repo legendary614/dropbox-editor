@@ -31873,6 +31873,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             }
         },
 
+        hide: function() {
+            var domElement = new CKEDITOR.dom.element(ReactDOM.findDOMNode(this));
+            $(domElement.$).hide();
+        },
+
         /**
          * Updates the widget position based on the current interaction point.
          *
@@ -31926,23 +31931,22 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  * Modified by Levan
  * 2018-09-09
  */
- 
+
 (function () {
     'use strict';
 
     /**
-     * The ButtonComment class provides wraps a selection in `pre` element.
+     * The ButtonComment class provides functionality for creating a comment which
+     * allows people to tweet part of the content in the editor.
      *
      * @class ButtonComment
-     * @uses ButtonActionStyle
      * @uses ButtonStateClasses
-     * @uses ButtonStyle
      */
 
     var ButtonComment = createReactClass({
         displayName: 'ButtonComment',
 
-        mixins: [AlloyEditor.ButtonStyle, AlloyEditor.ButtonStateClasses, AlloyEditor.ButtonActionStyle],
+        mixins: [AlloyEditor.ButtonStateClasses],
 
         // Allows validating props being passed to the component.
         propTypes: {
@@ -31988,32 +31992,61 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             key: 'comment'
         },
 
+        commentTargetId: null,
+
         /**
-         * Lifecycle. Returns the default values of the properties used in the widget.
+         * Creates or removes the comment on the selection.
          *
          * @instance
          * @memberof ButtonComment
-         * @method getDefaultProps
-         * @return {Object} The default properties.
+         * @method handleClick
          */
-        getDefaultProps: function getDefaultProps() {
-            function guid() {
-                function s4() {
-                    return Math.floor((1 + Math.random()) * 0x10000)
-                    .toString(16)
-                    .substring(1);
-                }
-                return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-            };
+        handleClick: function handleClick() {
+            var editor = this.props.editor.get('nativeEditor');
 
-            return {
-                style: {
-                    element: 'comment',
-                    attributes: {
-                        'class': 'commentTarget-' + guid()
-                    }
+            var linkUtils = new CKEDITOR.Link(editor);
+
+            if (this.isActive()) {
+                linkUtils.remove(linkUtils.getFromSelection());
+            } else {
+                this.commentTargetId = 'commentTarget-' + this.guid();
+
+                linkUtils.create(this._getHref(), {
+                    'class': 'comment',
+                    'target': '_blank',
+                    'data-comment-target-id': this.commentTargetId
+                });
+            }
+
+            editor.fire('actionPerformed', this);
+        },
+
+        guid: function() {
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+            }
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+        },
+
+        /**
+         * Checks if the current selection is contained within a comment that points to twitter.com/intent/tweet.
+         *
+         * @instance
+         * @memberof ButtonComment
+         * @method isActive
+         * @return {Boolean} True if the selection is inside a comment, false otherwise.
+         */
+        isActive: function isActive() {
+            var link = new CKEDITOR.Link(this.props.editor.get('nativeEditor')).getFromSelection();
+            if (link) {
+                var dataId = link.getAttribute('data-comment-target-id');
+                if (dataId != undefined && dataId != "") {
+                    return true;
                 }
-            };
+            }
+            return false;
         },
 
         /**
@@ -32029,15 +32062,132 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
             return React.createElement(
                 'button',
-                { 'aria-label': AlloyEditor.Strings.comment, 'aria-pressed': cssClass.indexOf('pressed') !== -1, className: cssClass, 'data-type': 'button-comment', onClick: this.applyStyle, tabIndex: this.props.tabIndex, title: AlloyEditor.Strings.comment },
+                { 'aria-label': 'comment', className: cssClass, 'data-type': 'button-comment', onClick: this.handleClick, tabIndex: this.props.tabIndex, title: 'comment' },
                 React.createElement('span', { className: 'ae-icon-comment' })
             );
+        },
+
+        /**
+         * Generates the appropriate comment url based on the selected text and the configuration
+         * options received via props.
+         *
+         * @instance
+         * @memberof ButtonComment
+         * @method _getHref
+         * @protected
+         * @return {String} A valid comment url with the selected text and given configuration.
+         */
+        _getHref: function _getHref() {
+            return "javascript:void(0);";
         }
     });
 
     AlloyEditor.Buttons[ButtonComment.key] = AlloyEditor.ButtonComment = ButtonComment;
 })();
 'use strict';
+
+// (function () {
+//     'use strict';
+
+//     /**
+//      * The ButtonComment class provides wraps a selection in `pre` element.
+//      *
+//      * @class ButtonComment
+//      * @uses ButtonActionStyle
+//      * @uses ButtonStateClasses
+//      * @uses ButtonStyle
+//      */
+
+//     var ButtonComment = createReactClass({
+//         displayName: 'ButtonComment',
+
+//         mixins: [AlloyEditor.ButtonStyle, AlloyEditor.ButtonStateClasses, AlloyEditor.ButtonActionStyle],
+
+//         // Allows validating props being passed to the component.
+//         propTypes: {
+//             /**
+//              * The editor instance where the component is being used.
+//              *
+//              * @instance
+//              * @memberof ButtonComment
+//              * @property {Object} editor
+//              */
+//             editor: PropTypes.object.isRequired,
+
+//             /**
+//              * The label that should be used for accessibility purposes.
+//              *
+//              * @instance
+//              * @memberof ButtonComment
+//              * @property {String} label
+//              */
+//             label: PropTypes.string,
+
+//             /**
+//              * The tabIndex of the button in its toolbar current state. A value other than -1
+//              * means that the button has focus and is the active element.
+//              *
+//              * @instance
+//              * @memberof ButtonComment
+//              * @property {Number} tabIndex
+//              */
+//             tabIndex: PropTypes.number
+//         },
+
+//         // Lifecycle. Provides static properties to the widget.
+//         statics: {
+//             /**
+//              * The name which will be used as an alias of the button in the configuration.
+//              *
+//              * @default comment
+//              * @memberof ButtonComment
+//              * @property {String} key
+//              * @static
+//              */
+//             key: 'comment'
+//         },
+
+//         /**
+//          * Lifecycle. Returns the default values of the properties used in the widget.
+//          *
+//          * @instance
+//          * @memberof ButtonComment
+//          * @method getDefaultProps
+//          * @return {Object} The default properties.
+//          */
+//         getDefaultProps: function getDefaultProps() {
+//             return {
+//                 style: {
+//                     element: 'comment',
+//                     attributes: {
+//                         class: ''
+//                     }
+//                 }
+//             };
+//         },
+
+//         /**
+//          * Lifecycle. Renders the UI of the button.
+//          *
+//          * @instance
+//          * @memberof ButtonComment
+//          * @method render
+//          * @return {Object} The content which should be rendered.
+//          */
+//         render: function render() {
+//             var cssClass = 'ae-button ' + this.getStateClasses();
+
+//             return React.createElement(
+//                 'button',
+//                 { 'aria-label': AlloyEditor.Strings.comment, 'aria-pressed': cssClass.indexOf('pressed') !== -1, className: cssClass, 'data-type': 'button-comment', onClick: this.applyStyle, tabIndex: this.props.tabIndex, title: AlloyEditor.Strings.comment },
+//                 React.createElement('span', { className: 'ae-icon-comment' })
+//             );
+//         }
+//     });
+
+//     AlloyEditor.Buttons[ButtonComment.key] = AlloyEditor.ButtonComment = ButtonComment;
+// })();
+// 'use strict';
 
 
 (function () {
@@ -34637,6 +34787,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
          * @return {Object} The content which should be rendered.
          */
         render: function render() {
+
             var targetSelector = {
                 allowedTargets: this.props.allowedTargets,
                 editor: this.props.editor,
@@ -35173,6 +35324,13 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
          * @return {Boolean} True if the selection is inside a link, false otherwise.
          */
         isActive: function isActive() {
+            var link = new CKEDITOR.Link(this.props.editor.get('nativeEditor')).getFromSelection();
+            if (link) {
+                var dataId = link.getAttribute('data-comment-target-id');
+                if (dataId != undefined && dataId != "") {
+                    return false;
+                }
+            }
             return new CKEDITOR.Link(this.props.editor.get('nativeEditor')).getFromSelection() !== null;
         },
 
@@ -38965,6 +39123,30 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
             return selectionFunction;
         },
 
+        _getSetVisibleFunction: function _getSetVisibleFunction(setVisibleFn) {
+            var Lang = AlloyEditor.Lang;
+            var setVisibleFunction;
+
+            if (Lang.isFunction(setVisibleFn)) {
+                setVisibleFunction = setVisibleFn;
+            } else if (Lang.isString(setVisibleFn)) {
+                var parts = setVisibleFn.split('.');
+                var currentMember = window;
+                var property = parts.shift();
+
+                while (property && Lang.isObject(currentMember) && Lang.isObject(currentMember[property])) {
+                    currentMember = currentMember[property];
+                    property = parts.shift();
+                }
+
+                if (Lang.isFunction(currentMember)) {
+                    setVisibleFunction = currentMember;
+                }
+            }
+
+            return setVisibleFunction;
+        },
+
         /**
          * Analyzes the current editor selection and returns the selection configuration that matches.
          *
@@ -39017,6 +39199,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
             var currentSelection = this._getCurrentSelection();
             var result;
+            var visible;
 
             // If current selection has a function called `setPosition`, call it
             // and check the returned value. If false, fallback to the default positioning logic.
@@ -39030,11 +39213,25 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                         selectionData: this.props.selectionData
                     });
                 }
+
+                var setVisibleFn = this._getSetVisibleFunction(currentSelection.setVisible);
+
+                if (setVisibleFn) {
+                    visible = setVisibleFn.call(this, {
+                        editor: this.props.editor,
+                        editorEvent: this.props.editorEvent,
+                        selectionData: this.props.selectionData
+                    });
+                }
             }
 
-            if (!result) {
+            if (!result && visible != false) {
                 this.updatePosition();
                 this.show();
+            }
+
+            if (visible == false) {
+                this.hide();
             }
         }
     });

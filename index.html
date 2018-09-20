@@ -30,16 +30,6 @@
             #editable:focus {
                 outline: 0;
             }
-            comment {
-                border-style: solid;
-                border-bottom-color: #ffe9a8;
-                border-top-color: transparent;
-                border-left-color: transparent;
-                border-right-color: transparent;
-            }
-            comment:hover {
-                background-color: rgb(255, 233, 168);
-            }
             #paper-container {
                 margin: 50px;
                 width: 70%;
@@ -51,12 +41,29 @@
             #container {
                 display: flex;
             }
+            a.comment {
+                text-decoration: none;
+                color: black;
+                border-style: solid;
+                border-bottom-color: #ffe9a8;
+                border-top-color: transparent;
+                border-left-color: transparent;
+                border-right-color: transparent;
+                cursor: pointer;
+            }
+            a.comment:hover,
+            a.comment.active {
+                background-color: rgb(255, 233, 168);
+            }
+
             .comment .comment-wrapper .wrapper .content,
             .comment .comment-wrapper .name {
                 color: #637282;
             }
             .comment:hover .comment-wrapper .wrapper .content, 
-            .comment:hover .comment-wrapper .name {
+            .comment:hover .comment-wrapper .name,
+            .comment.active .comment-wrapper .wrapper .content, 
+            .comment.active .comment-wrapper .name {
                 color: #000;
             }
             .comment .comment-wrapper .wrapper .actions,
@@ -64,14 +71,17 @@
                 visibility: hidden;
             }
             .comment:hover .comment-wrapper .wrapper .actions,
-            .comment:hover .comment-wrapper time {
+            .comment:hover .comment-wrapper time,
+            .comment.active .comment-wrapper .wrapper .actions,
+            .comment.active .comment-wrapper time {
                 visibility: visible;
             }
             .comment .comment-wrapper .profile-picture {
                 opacity: 0.3;
                 filter: alpha(opacity=30);
             }
-            .comment:hover .comment-wrapper .profile-picture {
+            .comment:hover .comment-wrapper .profile-picture,
+            .comment.active .comment-wrapper .profile-picture {
                 opacity: 1;
                 filter: alpha(opacity=100);
             }
@@ -154,14 +164,9 @@
                 comments = $.data($('#comments-container')[0], 'comments');
                 comments.toggleMainCommentingField(false);
 
-                function removeComment(commentClass) {
-                    var elements = new Array();
-                    for (var i = 0; i< $('.' + commentClass).length; i++) {
-                        elements.push(element = $('.' + commentClass)[i]);
-                    }
-                    elements.forEach((element) => {
-                        element.outerHTML = $(element).html();
-                    });
+                function removeComment(commentTargetId) {
+                    var element = $("[data-comment-target-id='"+commentTargetId+"']");
+                    element.length > 0 ? element[0].outerHTML = element.html() : '';
                 }
                 var editor = AlloyEditor.editable('editable', {
                     title: false,
@@ -170,13 +175,24 @@
                             selections: [
                                 {
                                     name: 'text',
-                                    buttons: ['bold', 'italic', 'underline', '|', 'strike', 'h1', 'h2', 'ul', 'link', 'comment'],
-                                    test: AlloyEditor.SelectionTest.text,
+                                    buttons: ['bold', 'italic', 'underline', 'strike', 'h1', 'h2', 'ul', 'link', 'comment'],
+                                    test: AlloyEditor.SelectionTest.text
                                 },
                                 {
                                     name: 'link',
                                     buttons: ['linkEdit'],
-                                    test: AlloyEditor.SelectionTest.link
+                                    test: AlloyEditor.SelectionTest.link,
+                                    setVisible: function(payload) {
+                                        var link = new CKEDITOR.Link(this.props.editor.get('nativeEditor')).getFromSelection();
+                                        if (link) {
+                                            var dataId = link.getAttribute('data-comment-target-id');
+                                            if (dataId != undefined && dataId != "") {
+                                                // this.moveToPoint([-1999, -1999], [-1999, -1999]);
+                                                return false;
+                                            }
+                                        }
+                                        return true;
+                                    }
                                 }
                             ]
                         }
@@ -186,42 +202,55 @@
                 editor.get('nativeEditor').on('actionPerformed', function(event) {
                     if (event.data == null || event.data.props.tabKey !== 'comment') {
                         return;
+                    }                    
+
+                    if (event.data.isActive()) {
+                        var commentTargetId = event.data.commentTargetId;
+                        commenting = {
+                            commentTargetId: commentTargetId
+                        };
+                        
+                        comments.toggleMainCommentingField(true);
+                        comments.options.commentTargetId = commentTargetId;
                     }
 
                     event.editor.getSelection().removeAllRanges();
                     event.editor.fire('actionPerformed', null);
-
-                    var commentClass = event.data.props.style.attributes.class;
-                    commenting = {
-                        commentClass: commentClass
-                    };
-
-                    comments.toggleMainCommentingField(true);
-                    comments.options.commentClass = commentClass;
                 });
                 
                 editor.get('nativeEditor').on('editorInteraction', function(event) {
                     if (commenting != null && event.data.nativeEvent.type != "mouseleave") {
-                        removeComment(commenting.commentClass);
+                        removeComment(commenting.commentTargetId);
                         commenting = null;
                         comments.toggleMainCommentingField(false);
                     }
                 });
 
-                $(document).on("mouseenter", "[class*='commentTarget']", function(e) {
-                    comments.setActive($(this).attr("class"));
+                $(document).on("mouseenter", "[data-comment-target-id*='commentTarget']", function(e) {
+                    comments.setActive($(this).data('comment-target-id'));
+                });
+                $(document).on("mouseleave", "[data-comment-target-id*='commentTarget']", function(e) {
+                    comments.setDeactive($(this).data('comment-target-id'));
+                });
+
+                $(document).on("mouseenter", ".comment[data-id*='commentTarget']", function(e) {
+                    var element = $("[data-comment-target-id='"+$(this).data('id')+"']");
+                    !element.hasClass('active') ? element.addClass('active') : '';
+                });
+                $(document).on("mouseleave", ".comment[data-id*='commentTarget']", function(e) {
+                    var element = $("[data-comment-target-id='"+$(this).data('id')+"']");
+                    element.hasClass('active') ? element.removeClass('active') : '';
                 });
 
                 $('#comments-container').on('click', '.commenting-field.main .close', function(e, param) {
-                    console.log($("[class*='commentTarget']"));
-
                     if (commenting != null && param != "post") {
-                        console.log(e);
-                        removeComment(commenting.commentClass);
+                        removeComment(commenting.commentTargetId);
+                        commenting = null;
+                    }
+                    if (commenting != null && param == "post") {
                         commenting = null;
                     }
                     comments.toggleMainCommentingField(false);
-                    
                 });
             });
         </script>
