@@ -59,6 +59,7 @@
             .comment .comment-wrapper .wrapper .content,
             .comment .comment-wrapper .name {
                 color: #637282;
+                font-family: 'AtlasGrotesk,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif'
             }
             .comment:hover .comment-wrapper .wrapper .content, 
             .comment:hover .comment-wrapper .name,
@@ -114,8 +115,12 @@
                     });
                     return data;
                 }
+
+                console.log(usersArray);
+
                 $('#comments-container').comments({
-                    profilePictureURL: 'https://i.imgur.com/EW8v5yG.jpg',
+                    profilePictureURL: 'https://i.imgur.com/V45GehK.jpg',
+                    shortname: 'HS',
                     currentUserId: 3,
                     roundProfilePictures: true,
                     textareaRows: 1,

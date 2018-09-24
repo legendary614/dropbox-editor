@@ -1292,15 +1292,42 @@
         },
 
         createProfilePictureElement: function(src, userId) {
+            if (userId == undefined) {
+                var shortname = this.options.shortname;
+            } else {
+                var currentUser = usersArray.find(function(user) { return user.id == userId; });
+                var shortname = currentUser.shortname;
+            }
             if(src) {
               var profilePicture = $('<div/>').css({
-                  'background-image': 'url(' + src + ')'
+                //   'background-image': 'url(' + src + ')'
                 });
             } else {
                 var profilePicture = $('<i/>', {
                     'class': 'fa fa-user'
                 });
             }
+            var avatar = $('<span>').css({
+                'background-color': 'rgb(51, 204, 102)',
+                'border-radius': '50%',
+                'height': '32px',
+                'line-height': '32px',
+                'width': '32px',
+                'cursor': 'point !important',
+                'box-sizing': 'border-box',
+                'color': '#fff',
+                'float': 'left',
+                'text-align': 'center',
+                'text-transform': 'uppercase',
+                'margin': '9px',
+                'padding': '0',
+                'font-size': '12px',
+                'font-weight': '500',
+                'font-family': 'AtlasGrotesk,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif'
+            });
+
+            avatar.html(shortname);
+            profilePicture.html(avatar);
             profilePicture.addClass('profile-picture');
             profilePicture.attr('data-user-id', userId);
             if(this.options.roundProfilePictures) profilePicture.addClass('round');

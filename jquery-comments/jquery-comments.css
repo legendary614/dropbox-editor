@@ -464,13 +464,24 @@ http://viima.github.io/jquery-comments/*/
 	padding: .5em;
 }
 
-.jquery-comments ul.main li.comment .comment-wrapper {
-	border-top: 1px solid #DDD;
+.jquery-comments ul.main li.comment {
+	border: 1px solid transparent;
+	overflow: hidden;
+}
+
+.jquery-comments ul.main li.comment:hover,
+.jquery-comments ul.main li.comment.active {
+	border: 1px solid #DDD;
+	overflow: hidden;
+}
+
+.jquery-comments ul.main .child-comments li.comment {
+	border: 0px;
 	overflow: hidden;
 }
 
 .jquery-comments ul.main > li.comment:first-child > .comment-wrapper {
-	border-top: none;
+	/* border-top: none; */
 }
 
 .jquery-comments ul.main li.comment .comment-wrapper > .profile-picture {
@@ -635,13 +646,13 @@ http://viima.github.io/jquery-comments/*/
 	height: 1px;
 	float: left;
 
-	width: calc(3.6em + .5em);	/* Profile picture width plus margin */
-	max-width: calc(50px + .5em);	/* Profile picture max width plus margin */
+	/*width: calc(3.6em + .5em);*/	/* Profile picture width plus margin */
+	/*max-width: calc(50px + .5em);*/	/* Profile picture max width plus margin */
 }
 
 .jquery-comments ul.main li.comment .child-comments .profile-picture {
-	width: 2.4rem;
-	height: 2.4rem;
+	/* width: 2.4rem; */
+	/* height: 2.4rem; */
 }
 
 .jquery-comments ul.main li.comment .child-comments i.profile-picture {
